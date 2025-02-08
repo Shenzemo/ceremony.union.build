@@ -6,8 +6,17 @@ on:
 jobs:
   run-mpc:
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Create ceremony directory
         run: mkdir -p ceremony
@@ -15,4 +24,5 @@ jobs:
       - name: Run MPC client container
         run: |
           docker pull ghcr.io/unionlabs/union/mpc-client:v1.2
-          docker run -v ${{ github.workspace }}/ceremony:/ceremony -w /ceremony -p 4919:4919 --rm ghcr.io/unionlabs/union/mpc-client:v1.2
+          docker run -d -v ${{ github.workspace }}/ceremony:/ceremony -w /ceremony -p 4919:4919 --name mpc-client ghcr.io/unionlabs/union/mpc-client:v1.2
+          docker logs -f mpc-client
